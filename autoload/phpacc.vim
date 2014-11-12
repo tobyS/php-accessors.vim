@@ -12,6 +12,7 @@ let s:regex["comment_end"] = '^\s* \*/'
 let s:regex["comment_start"] = '^\s*/\*\*'
 let s:regex["comment_var"] = '^\s*\*\s\+@var\s\+\(\S\+\)\(\s\|$\)'
 let s:regex["type_short"] = '\\\([^\\]\+\)$'
+let s:regex["line_last"] = '^}'
 
 func! phpacc#GenerateAccessors(lineno)
     let l:line = getline(a:lineno)
@@ -37,8 +38,29 @@ func! phpacc#GenerateAccessors(lineno)
     let l:data["shorttype"] = l:short
 
     let l:function = s:ProcessTemplate("getter.tpl", l:data)
-    echom l:function
 
+    call s:AppendFunction(function)
+endfunc
+
+func! s:AppendFunction(function)
+    let l:appendlineno = s:FindLastLine()
+    let l:lines = split(a:function, "\n")
+
+    call append(l:appendlineno, l:lines)
+endfunc
+
+func! s:FindLastLine()
+    let l:last = line('$')
+    let l:current = l:last
+
+    while l:current >= 0
+        if match(getline(l:current), s:regex["line_last"])
+            return l:current
+        endif
+        let l:current = l:current - 1
+    endwhile
+
+    return l:last
 endfunc
 
 func! s:GenerateFunctionName(variable)
