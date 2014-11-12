@@ -6,14 +6,24 @@ let s:regex["attribute"] = '^\(\s*\)\(\(private\s*\|public\s*\|protected\s*\|sta
 let s:regex["comment_end"] = '^\s* \*/'
 let s:regex["comment_start"] = '^\s*/\*\*'
 let s:regex["comment_var"] = '^\s*\*\s\+@var\s\+\(\S\+\)\(\s\|$\)'
+let s:regex["type_short"] = '\\\([^\\]\+\)$'
 
 func! phpacc#GenerateAccessors(lineno)
     let l:line = getline(a:lineno)
+
+    if match(l:line, s:regex["attribute"])
+        throw "No attribute matched on line"
+    endif
+
     let l:matches = matchlist(l:line, s:regex["attribute"])
+    let l:variable = l:matches[4]
 
     let l:type = s:DetermineType(a:lineno)
+    let l:short = s:ShortType(l:type)
 
+    echom "Variable: " . l:variable
     echom "Type: " . l:type
+    echom "Short type: " . l:short
 endfunc
 
 func! s:DetermineType(startline)
@@ -41,6 +51,15 @@ func! s:DetermineType(startline)
     endwhile
 
     return l:type
+endfunc
+
+func! s:ShortType(type)
+    if match(a:type, s:regex["type_short"]) < 0
+        return a:type
+    endif
+
+    let l:matches = matchlist(a:type, s:regex["type_short"])
+    return l:matches[1]
 endfunc
 
 let &cpo = s:old_cpo
