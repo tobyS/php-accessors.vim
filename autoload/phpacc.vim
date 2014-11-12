@@ -1,6 +1,11 @@
 let s:old_cpo = &cpo
 set cpo&vim
 
+if !exists("phpacc_template_dir")
+    " TODO: Implement some guessing for template directories
+    throw "Missing variable 'phpacc_template_dir'. Please configure."
+endif
+
 let s:regex = {}
 let s:regex["attribute"] = '^\(\s*\)\(\(private\s*\|public\s*\|protected\s*\|static\s*\)\+\)\s*\$\([^ ;=]\+\)[ =]*\(.*\);\?$'
 let s:regex["comment_end"] = '^\s* \*/'
@@ -24,6 +29,25 @@ func! phpacc#GenerateAccessors(lineno)
     echom "Variable: " . l:variable
     echom "Type: " . l:type
     echom "Short type: " . l:short
+
+    let l:data = {}
+    let l:data["variable"] = l:variable
+    let l:data["function"] = s:GenerateFunctionName(l:variable)
+    let l:data["type"] = l:type
+    let l:data["shorttype"] = l:short
+
+    let l:function = s:ProcessTemplate("getter.tpl", l:data)
+    echom l:function
+
+endfunc
+
+func! s:GenerateFunctionName(variable)
+    return toupper(strpart(a:variable, 0, 1)) . strpart(a:variable, 1)
+endfunc
+
+func! s:ProcessTemplate(filename, data)
+    let l:file = g:phpacc_template_dir . '/' . a:filename
+    return vmustache#RenderFile(l:file, a:data)
 endfunc
 
 func! s:DetermineType(startline)
