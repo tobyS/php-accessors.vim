@@ -1,3 +1,15 @@
+"
+" Configuration:
+"
+" phpacc_generate_functions
+"   This can be set to a list of functions to be generated whenever
+"   GenerateAccessors() is called. If this variable is empty, the user will be
+"   asked to determine the types for each attribute. To define the default
+"   set, use the template names (without .tpl):
+"
+"       ["getter", "setter"]
+
+
 let s:old_cpo = &cpo
 set cpo&vim
 
@@ -15,21 +27,76 @@ let s:regex["type_short"] = '\\\([^\\]\+\)$'
 let s:regex["line_last"] = '^}'
 
 func! phpacc#GenerateAccessors() range
+
+    let l:config = s:GetConfig()
+
     let l:current = a:firstline
 
     let l:functions = []
     while l:current <= a:lastline
         if match(getline(l:current), s:regex["attribute"]) > -1
-            let l:functions = extend(l:functions, s:GenerateAccessors(l:current, 1, 1))
+            
+            let l:generate_functions = []
+            if !l:config["generate_functions"]
+                let l:generate_functions = s:AskGenerateFunctions()
+
+                if s:AskRepeatChoice()
+                    let l:config["generate_functions"] = l:generate_functions
+                endif
+            else
+                let l:generate_functions = l:config["generate_functions"]
+            endif
+
+            let l:functions = extend(l:functions, s:GenerateAccessors(l:current, l:generate_functions))
         endif
 
         let l:current = l:current + 1
     endwhile
 
+
     call s:AppendFunctions(l:functions)
 endfunc
 
-func! s:GenerateAccessors(lineno, getter, setter)
+func! s:AskGenerateFunctions()
+    let l:choice = confirm("What to generate?", "&getter\n&setter\n&both", 3)
+
+    if l:choice == 1
+        return ["getter"]
+    endif
+    if l:choice == 2
+        return ["setter"]
+    endif
+    if l:choice == 3
+        return ["getter", "setter"]
+    endif
+endfunc
+
+func! s:AskRepeatChoice()
+    let l:choice = confirm("Use this selection for all following?", "&yes\n&no", 2)
+
+    if l:choice == 1
+        return 1
+    endif
+    if l:choice == 2
+        return 0
+    endif
+endfunc
+
+func! s:GetConfig()
+    let config = {}
+
+    if exists("b:phpacc_generate_functions")
+        let config["generate_functions"] = b:phpacc_generate_functions
+    elseif exists("g:phpacc_generate_functions")
+        let config["generate_functions"] = g:phpacc_generate_functions
+    else
+        let config["generate_functions"] = 0
+    endif
+
+    return config
+endfunc
+
+func! s:GenerateAccessors(lineno, function_templates)
     let l:line = getline(a:lineno)
 
     if match(l:line, s:regex["attribute"])
@@ -53,12 +120,9 @@ func! s:GenerateAccessors(lineno, getter, setter)
 
     let l:functions = []
 
-    if a:getter > 0
-        let l:functions = add(l:functions, s:ProcessTemplate("getter.tpl", l:data))
-    endif
-    if a:setter > 0
-        let l:functions = add(l:functions, s:ProcessTemplate("setter.tpl", l:data))
-    endif
+    for l:template in a:function_templates
+        let l:functions = add(l:functions, s:ProcessTemplate(l:template . ".tpl", l:data))
+    endfor
 
     return l:functions
 endfunc
