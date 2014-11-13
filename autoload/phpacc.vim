@@ -1,15 +1,3 @@
-"
-" Configuration:
-"
-" phpacc_generate_functions
-"   This can be set to a list of functions to be generated whenever
-"   GenerateAccessors() is called. If this variable is empty, the user will be
-"   asked to determine the types for each attribute. To define the default
-"   set, use the template names (without .tpl):
-"
-"       ["getter", "setter"]
-
-
 let s:old_cpo = &cpo
 set cpo&vim
 
