@@ -28,11 +28,11 @@ __ https://github.com/gmarik/vundle
 
 in your ``.vimrc`` and then run ``:BundleInstall`` in a new VIM instance.
 
-Before using PDV you must set the variable ``phpacc_template_dir`` which points
-to your templates. You can use the default templates which should reside in
-``~/.vim/bundles/php-accessors.vim/templates``.
+Before using PDV you **must** set the variable ``phpacc_template_dir`` which
+points to your templates. You can use the default templates which should reside
+in ``~/.vim/bundles/php-accessors.vim/templates``.
 
-Additionally, you can optionally configure ``phpacc_generate_functions`` which
+Additionally, you can *optionally* configure ``phpacc_generate_functions`` which
 is an array of accessor functions to be generated when you trigger the plugin.
 An example would be::
 
