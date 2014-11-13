@@ -37,10 +37,12 @@ func! phpacc#GenerateAccessors() range
         if match(getline(l:current), s:regex["attribute"]) > -1
             
             let l:generate_functions = []
-            if !l:config["generate_functions"]
-                let l:generate_functions = s:AskGenerateFunctions()
+            if !has_key(l:config, "generate_functions")
+                let l:localconfig = s:AskGenerateFunctions()
 
-                if s:AskRepeatChoice()
+                let l:generate_functions = l:localconfig["generate_functions"]
+
+                if l:localconfig["repeat"]
                     let l:config["generate_functions"] = l:generate_functions
                 endif
             else
@@ -58,22 +60,41 @@ func! phpacc#GenerateAccessors() range
 endfunc
 
 func! s:AskGenerateFunctions()
-    let l:choice = confirm("What to generate?", "&getter\n&setter\n&both", 3)
+    let l:config = {"generate_functions": [], "repeat": 0}
 
-    if l:choice == 1
-        return ["getter"]
+    let l:choice = input("Generate (g)etter, (s)etter, (r)epeat choice [gsr]: ")
+
+    if l:choice == ""
+        let l:choice = "gsr"
     endif
-    if l:choice == 2
-        return ["setter"]
-    endif
-    if l:choice == 3
-        return ["getter", "setter"]
-    endif
+
+    let l:len = strlen(l:choice)
+    let l:i = 0
+    while l:i < l:len
+        let l:char = strpart(l:choice, i, 1)
+
+        if l:char == "g"
+            call add(l:config["generate_functions"], "getter")
+        endif
+        if l:char == "s"
+            call add(l:config["generate_functions"], "setter")
+        endif
+        if l:char == "r"
+            let l:config["repeat"] = 1
+        endif
+
+        let l:i = l:i + 1
+    endwhile
+
+    return l:config
 endfunc
 
 func! s:AskRepeatChoice()
     let l:choice = confirm("Use this selection for all following?", "&yes\n&no", 2)
 
+    if l:choice == 0
+        throw "Canceled action"
+    endif
     if l:choice == 1
         return 1
     endif
@@ -89,8 +110,6 @@ func! s:GetConfig()
         let config["generate_functions"] = b:phpacc_generate_functions
     elseif exists("g:phpacc_generate_functions")
         let config["generate_functions"] = g:phpacc_generate_functions
-    else
-        let config["generate_functions"] = 0
     endif
 
     return config
