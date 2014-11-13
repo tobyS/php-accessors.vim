@@ -14,7 +14,22 @@ let s:regex["comment_var"] = '^\s*\*\s\+@var\s\+\(\S\+\)\(\s\|$\)'
 let s:regex["type_short"] = '\\\([^\\]\+\)$'
 let s:regex["line_last"] = '^}'
 
-func! phpacc#GenerateAccessors(lineno, getter, setter)
+func! phpacc#GenerateAccessors() range
+    let l:current = a:firstline
+
+    let l:functions = []
+    while l:current <= a:lastline
+        if match(getline(l:current), s:regex["attribute"]) > -1
+            let l:functions = extend(l:functions, s:GenerateAccessors(l:current, 1, 1))
+        endif
+
+        let l:current = l:current + 1
+    endwhile
+
+    call s:AppendFunctions(l:functions)
+endfunc
+
+func! s:GenerateAccessors(lineno, getter, setter)
     let l:line = getline(a:lineno)
 
     if match(l:line, s:regex["attribute"])
@@ -32,6 +47,9 @@ func! phpacc#GenerateAccessors(lineno, getter, setter)
     let l:data["function"] = s:GenerateFunctionName(l:variable)
     let l:data["type"] = l:type
     let l:data["shorttype"] = l:short
+    let l:data["has_type"] = l:type != ""
+
+    echom l:data["type"]
 
     let l:functions = []
 
@@ -42,7 +60,7 @@ func! phpacc#GenerateAccessors(lineno, getter, setter)
         let l:functions = add(l:functions, s:ProcessTemplate("setter.tpl", l:data))
     endif
 
-    call s:AppendFunctions(l:functions)
+    return l:functions
 endfunc
 
 func! s:AppendFunctions(functions)
