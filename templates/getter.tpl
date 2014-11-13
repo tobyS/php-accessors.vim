@@ -1,6 +1,6 @@
 
     /**
-     * @return {{type}}
+     * @return{{#type}} {{type}}{{/type}}{{^type}} mixed{{/type}}
      */
     function get{{function}}()
     {
