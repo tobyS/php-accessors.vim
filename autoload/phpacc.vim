@@ -111,8 +111,6 @@ func! s:GenerateAccessors(lineno, function_templates)
     let l:data["shorttype"] = l:short
     let l:data["has_type"] = l:type != ""
 
-    echom l:data["type"]
-
     let l:functions = []
 
     for l:template in a:function_templates
@@ -130,7 +128,6 @@ func! s:AppendFunctions(functions)
     endfor
 
     let l:appendlineno = s:FindLastLine()
-    echom string(l:lines)
 
     call append(l:appendlineno, l:lines)
 endfunc
@@ -173,7 +170,6 @@ func! s:DetermineType(startline)
         endif
 
         if match(l:currentline, s:regex["comment_var"]) > -1
-            echo "Matched"
             let l:matches = matchlist(l:currentline, s:regex["comment_var"])
             return l:matches[1]
         endif
