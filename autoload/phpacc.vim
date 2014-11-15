@@ -182,7 +182,7 @@ endfunc
 
 func! s:ShortType(type)
     if match(a:type, s:regex["type_short"]) < 0
-        return a:type
+        return ''
     endif
 
     let l:matches = matchlist(a:type, s:regex["type_short"])
