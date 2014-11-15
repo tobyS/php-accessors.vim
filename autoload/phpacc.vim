@@ -23,10 +23,13 @@ func! phpacc#GenerateAccessors() range
     let l:functions = []
     while l:current <= a:lastline
         if match(getline(l:current), s:regex["attribute"]) > -1
+
+            let l:matches = matchlist(getline(l:current), s:regex["attribute"])
+            let l:attribute_name = l:matches[4]
             
             let l:generate_functions = []
             if !has_key(l:config, "generate_functions")
-                let l:localconfig = s:AskGenerateFunctions()
+                let l:localconfig = s:AskGenerateFunctions(l:attribute_name)
 
                 let l:generate_functions = l:localconfig["generate_functions"]
 
@@ -43,14 +46,13 @@ func! phpacc#GenerateAccessors() range
         let l:current = l:current + 1
     endwhile
 
-
     call s:AppendFunctions(l:functions)
 endfunc
 
-func! s:AskGenerateFunctions()
+func! s:AskGenerateFunctions(attribute_name)
     let l:config = {"generate_functions": [], "repeat": 0}
 
-    let l:choice = input("Generate (g)etter, (s)etter, (r)epeat choice [gsr]: ")
+    let l:choice = input("For $" . a:attribute_name . " generate (g)etter, (s)etter, (r)epeat choice [gsr]: ")
 
     if l:choice == ""
         let l:choice = "gsr"
@@ -75,20 +77,6 @@ func! s:AskGenerateFunctions()
     endwhile
 
     return l:config
-endfunc
-
-func! s:AskRepeatChoice()
-    let l:choice = confirm("Use this selection for all following?", "&yes\n&no", 2)
-
-    if l:choice == 0
-        throw "Canceled action"
-    endif
-    if l:choice == 1
-        return 1
-    endif
-    if l:choice == 2
-        return 0
-    endif
 endfunc
 
 func! s:GetConfig()
